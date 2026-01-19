@@ -1,3 +1,4 @@
+#include <cpr/cpr.h>
 #include <iostream>
 #include <string>
 
@@ -21,11 +22,20 @@ public:
 };
 
 int main() {
-  std::cout << "Debut du client low_level" << std::endl;
-  Task maTache("task_test_01", 500, 0.0f);
+  std::cout << "--- Test de connexion HTTP ---" << std::endl;
+  std::string url = "http://127.0.0.1:8000/api/task/1/";
 
-  // Affichage
-  maTache.display();
+  std::cout << "Requete vers : " << url << " ..." << std::endl;
+  cpr::Response r = cpr::Get(cpr::Url{url});
+
+  // 3. Vérification du statut HTTP
+  if (r.status_code == 200) {
+    std::cout << "Succes ! Reponse recue :" << std::endl;
+    std::cout << r.text << std::endl;
+  } else {
+    std::cerr << "Erreur HTTP : " << r.status_code << std::endl;
+    std::cerr << "Message : " << r.text << std::endl;
+  }
 
   return 0;
 }
