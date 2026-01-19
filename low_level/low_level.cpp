@@ -9,6 +9,8 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
+#include <omp.h>
+
 using json = nlohmann::json;
 using namespace std::chrono;
 
@@ -80,7 +82,8 @@ public:
   void work() {
     if (!A || !b)
       return;
-
+    omp_set_num_threads(8);
+    Eigen::setNbThreads(8);
     std::cout << "Calcul en cours (Tache " << identifier << ", taille " << size
               << ")..." << std::endl;
     auto start = high_resolution_clock::now();
