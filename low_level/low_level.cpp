@@ -88,7 +88,8 @@ public:
               << ")..." << std::endl;
     auto start = high_resolution_clock::now();
 
-    Eigen::VectorXf result = A->colPivHouseholderQr().solve(*b);
+    // Eigen::VectorXf result = A->colPivHouseholderQr().solve(*b);
+    Eigen::VectorXf result = A->partialPivLu().solve(*b);
     x = result;
 
     auto end = high_resolution_clock::now();

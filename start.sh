@@ -11,12 +11,6 @@ cleanup() {
 }
 trap cleanup SIGINT EXIT
 
-#copie des .dll (si vous êtes sur windows)
-if [ -d "build/Release" ]; then
-    echo "🪟 Windows détecté : Copie des DLLs vers le dossier Release..."
-    find build -name "*.dll" -exec cp {} build/Release/ \; 2>/dev/null
-fi
-
 # C++
 echo "Compilation du C++ (Mode Release)..."
 cd low_level
@@ -24,6 +18,12 @@ cd low_level
 #Compilation
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
+
+#copie des .dll (si vous êtes sur windows)
+if [ -d "build/Release" ]; then
+    echo "🪟 Windows détecté : Copie des DLLs vers le dossier Release..."
+    find build -name "*.dll" -exec cp {} build/Release/ \; 2>/dev/null
+fi
 
 echo "--- Démarrage de l'infrastructure ---"
 
