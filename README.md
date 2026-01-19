@@ -69,8 +69,9 @@ chmod +x start.sh
 
 Lancez le projet :
 
+```
 ./start.sh
-
+```
 ## Tests
 
 ```
