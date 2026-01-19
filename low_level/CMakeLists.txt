@@ -15,8 +15,12 @@ FetchContent_Declare(
   cpr
   DOWNLOAD_EXTRACT_TIMESTAMP OFF
   URL "https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.tar.gz")
+FetchContent_Declare(
+  json
+  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+  URL "https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz")
 
-FetchContent_MakeAvailable(cpr)
+FetchContent_MakeAvailable(json cpr)
 
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE cpr::cpr)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json cpr::cpr)
