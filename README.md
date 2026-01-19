@@ -57,7 +57,7 @@ Lancer le QueueManager, le Proxy, le Boss et le Worker dans l'ordre.
 
 Afficher les résultats en temps réel.
 
-Étapes avant de lancer
+### Étapes avant de lancer
 
 Assurez-vous d'être à la racine du projet.
 
@@ -319,7 +319,7 @@ Verifying Task 9 in Python... Done.
 ```
 
 ## Conclusion
-Contre toute attente, Python est 5 à 8 fois plus rapide que le C++.
+Python est 5 à 8 fois plus rapide que le C++.
 
 En C++, nous utilisont colPivHouseholderQr, méthode stable mais couteuse en termes d'operation
 En python, numpy utilise dgesv qui demande x2 fois moins de calculs.
