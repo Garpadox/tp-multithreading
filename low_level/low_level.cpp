@@ -1,65 +1,102 @@
-#include <cpr/cpr.h>
+#include <chrono>
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include <memory>
+#include <optional>
 #include <string>
 
+#include <Eigen/Dense>
+#include <cpr/cpr.h>
+#include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
+using namespace std::chrono;
 
 class Task {
 private:
   std::string identifier;
   int size;
-  float duration;
+  float time;
+
+  std::unique_ptr<Eigen::MatrixXf> A;
+  std::unique_ptr<Eigen::VectorXf> b;
+  std::optional<Eigen::VectorXf> x;
 
 public:
-  Task(std::string id, int s, float d) : identifier(id), size(s), duration(d) {}
-  Task(json data) {
-    std::cout << "Construction JSON" << std::endl;
-    identifier = data["identifier"];
-    size = data["size"];
-    duration = data.value("duration", 0.0f);
-  }
   Task(int id) {
-    std::cout << "Construction ID (" << id << ")..." << std::endl;
+    std::cout << "Recuperation de la tache " << id << "..." << std::endl;
     std::string url =
         "http://127.0.0.1:8000/api/task/" + std::to_string(id) + "/";
-
     cpr::Response r = cpr::Get(cpr::Url{url}, cpr::Timeout{5000});
 
     if (r.status_code != 200) {
-      std::cerr << "Tache introuvable " << id << std::endl;
-      std::cerr << "HTTP : " << r.status_code << std::endl;
+      std::cerr << "Erreur HTTP " << r.status_code << std::endl;
       exit(EXIT_FAILURE);
     }
+
     try {
       json data = json::parse(r.text);
+
       identifier = data["identifier"];
       size = data["size"];
-      duration = data.value("duration", 0.0f);
-    } catch (json::parse_error &e) {
-      std::cerr << "Erreur de parsing : " << e.what() << std::endl;
+      time = 0.0f;
+      if (data.contains("a") && !data["a"].is_null()) {
+        auto json_a = data["a"];
+        auto json_b = data["b"];
+
+        A = std::make_unique<Eigen::MatrixXf>(size, size);
+        b = std::make_unique<Eigen::VectorXf>(size);
+
+        for (int i = 0; i < size; ++i)
+          for (int j = 0; j < size; ++j)
+            (*A)(i, j) = json_a[i][j];
+
+        for (int i = 0; i < size; ++i)
+          (*b)(i) = json_b[i];
+
+        std::cout << "Donnees chargees depuis le serveur." << std::endl;
+
+      } else {
+        std::cout << "WARNING: Matrices absentes du serveur." << std::endl;
+        std::cout << "Generation aleatoire locale (Size: " << size << ")..."
+                  << std::endl;
+
+        A = std::make_unique<Eigen::MatrixXf>(
+            Eigen::MatrixXf::Random(size, size));
+        b = std::make_unique<Eigen::VectorXf>(Eigen::VectorXf::Random(size));
+      }
+
+    } catch (std::exception &e) {
+      std::cerr << "Erreur parsing : " << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
   }
 
-  void display() const {
-    std::cout << "=== Tache : " << identifier << " ===" << std::endl;
-    std::cout << "Size     : " << size << std::endl;
-    std::cout << "Duration : " << duration << "s" << std::endl;
-    std::cout << "============================" << std::endl;
+  void work() {
+    if (!A || !b)
+      return;
+
+    std::cout << "Calcul en cours (Resolution Ax=b)..." << std::endl;
+    auto start = high_resolution_clock::now();
+    Eigen::VectorXf result = A->colPivHouseholderQr().solve(*b);
+    x = result;
+
+    auto end = high_resolution_clock::now();
+    time = duration<float>(end - start).count();
+
+    std::cout << "Termine en " << time << " secondes." << std::endl;
+  }
+
+  void display_result() const {
+    if (x.has_value()) {
+      Eigen::VectorXf check = (*A) * (*x) - (*b);
+      std::cout << "Erreur de precision : " << check.norm() << std::endl;
+    }
   }
 };
 
 int main() {
-  std::cout << "Constructeurs Intelligents" << std::endl;
-  std::cout << "\nDemande de la tache ID 1" << std::endl;
-  Task t1(1);
-  t1.display();
-  std::cout << "\nCreation locale via JSON" << std::endl;
-  json local_json = {
-      {"identifier", "task_locale"}, {"size", 999}, {"duration", 12.5}};
-  Task t2(local_json);
-  t2.display();
-
+  Task t(1);
+  t.work();
+  t.display_result();
   return 0;
 }
